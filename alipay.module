@@ -4,6 +4,9 @@
  * This file is licensed under GPLv2+.
 */
 
+//include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/alipay.config.php');
+//include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/lib/alipay_submit.class.php');
+
 /**
  * @file
  * Provides alipay interface for drupal.
@@ -81,18 +84,69 @@ function alipay_admin_form_validate($form, $form_state) {
 	if(preg_match('@^2088[0-9]{12}$@', $form_state['values']['merid']) !== 1) {
 		form_set_error('merid', t('The @field you have entered is not valid.',array('@field' => t('Merchant ID'))));
 	}
-	if(preg_match('@^[0-9]{32}$@', $form_state['values']['security_key']) !== 1) {
+	if(preg_match('@^[0-9a-z]{32}$@', $form_state['values']['security_key']) !== 1) {
 		form_set_error('security_key', t('The @field you have entered is not valid.',array('@field' => t('Security Key'))));
 	}
 }
 
 function alipay_admin_form_submit($form, $form_state) {
 	$settings=array(
-		'security_key', 'merid'
+		'security_key', 'merid', 'meremail'
 	);
 	foreach($settings as $s) {
 		variable_set('alipay_'.$s,trim($form_state['values'][$s]));
 	}
+}
+
+function alipay_paymentgatewayinfo() {
+	return array(
+		'alipay' => array(
+			'url' => 'http://www.alipay.com',
+			'front'  => drupal_get_path('module', 'alipay').'/images/alipay.gif',
+			'payment' => drupal_get_path('module', 'alipay').'/images/alipay.gif',
+		),
+	);
+}
+
+function alipay_access() {
+	if($_SERVER['REQUEST_METHOD']!=='POST') {
+		return false;
+	}
+	return true;
+}
+
+function alipay_submit_form($form, $form_state) {
+	return;
+}
+
+function alipay_submit_form_submit($form, $form_state) {
+	include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/alipay.config.php');
+	include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/lib/alipay_submit.class.php');
+	$parameter = array(
+		"service" => "create_direct_pay_by_user",
+		"partner" => variable_get('alipay_merid', $alipay_config['partner']),
+		"payment_type"	=> '1',
+		"notify_url"	=> $GLOBALS['base_url'].'/charge/alipay/response_back',
+		"return_url"	=> $GLOBALS['base_url'].'/charge/alipay/response',
+		"seller_id"	=> variable_get('alipay_merid', $alipay_config['partner']),
+		"out_trade_no"	=> $form_state['values']['orderno'],
+		"subject"	=> $form_state['values']['ordertitle'],
+		//"total_fee"	=> $form_state['values']['amount'],
+		"total_fee"	=> '0.01',
+		"anti_phishing_key"	=> '',
+		"exter_invoke_ip"	=> $_SERVER['REMOTE_ADDR'],
+		"_input_charset"	=> trim(strtolower($alipay_config['input_charset']))
+	);
+
+	$alipay_config['partner'] = variable_get('alipay_merid','');
+
+	//安全检验码，以数字和字母组成的32位字符
+	$alipay_config['key'] = variable_get('alipay_security_key','');
+
+	//建立请求
+	$alipaySubmit = new AlipaySubmit($alipay_config);
+	$html_text = $alipaySubmit->buildRequestForm($parameter,'post');
+	return '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>'.$html_text.'</body></html>';
 }
 
 ?>
