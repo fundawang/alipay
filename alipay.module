@@ -1,0 +1,98 @@
+<?php
+
+/*
+ * This file is licensed under GPLv2+.
+*/
+
+/**
+ * @file
+ * Provides alipay interface for drupal.
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function alipay_help($path, $arg) {
+	switch ($path) {
+		case 'charge/alipay':
+			$output = '<b>'.t('FAQ on Alipay').'</b><br/><ul>';
+			$output.= '<li>'.t('Any questions, you may call 0571-88156688. Or, click <a href="@url" target="_blank">here</a>.',array('@url'=>'http://help.alipay.com/lab/index.htm')).'</li>';
+			$output.='</ul>';
+			break;
+		default: return;
+	}
+	return $output;
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function alipay_menu() {
+	$items['admin/config/services/alipay'] = array(
+		'title' => 'alipay settings',
+		'description' => 'alipay merchant settings.',
+		'access arguments' => array('access administration pages'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('alipay_admin_form'),
+	);
+	$items['charge/alipay'] = array(
+		'access callback' => 'alipay_access',
+		'type' => MENU_CALLBACK,
+		'page callback' => 'alipay_submit_form',
+	);
+	$items['charge/alipay/response'] = array(
+		'access callback' => 'alipay_response_access',
+		'type' => MENU_CALLBACK,
+		'page callback' => 'alipay_response',
+	);
+	$items['charge/alipay/response_back'] = array(
+		'access callback' => 'alipay_response_access',
+		'type' => MENU_CALLBACK,
+		'page callback' => 'alipay_response',
+	);
+	return $items;
+}
+
+function alipay_admin_form($form, $form_state) {
+	$form=array(
+		'#submit' => array('alipay_admin_form_submit'),
+		'#validate' => array('alipay_admin_form_validate'),
+	);
+	$form['merid'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Merchant ID'),
+		'#default_value' => variable_get('alipay_merid'),
+		'#maxlength' => 16,
+		'#size' => 40,
+		'#required' => TRUE,
+	);
+	$form['security_key'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Security Key'),
+		'#default_value' => variable_get('alipay_security_key'),
+		'#required' => TRUE,
+		'#maxlength' => 32,
+		'#size' => 40,
+	);
+	return system_settings_form($form);
+}
+
+function alipay_admin_form_validate($form, $form_state) {
+	if(preg_match('@^2088[0-9]{12}$@', $form_state['values']['merid']) !== 1) {
+		form_set_error('merid', t('The @field you have entered is not valid.',array('@field' => t('Merchant ID'))));
+	}
+	if(preg_match('@^[0-9]{32}$@', $form_state['values']['security_key']) !== 1) {
+		form_set_error('security_key', t('The @field you have entered is not valid.',array('@field' => t('Security Key'))));
+	}
+}
+
+function alipay_admin_form_submit($form, $form_state) {
+	$settings=array(
+		'security_key', 'merid'
+	);
+	foreach($settings as $s) {
+		variable_set('alipay_'.$s,trim($form_state['values'][$s]));
+	}
+}
+
+?>
