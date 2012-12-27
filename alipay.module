@@ -91,7 +91,7 @@ function alipay_admin_form_validate($form, $form_state) {
 
 function alipay_admin_form_submit($form, $form_state) {
 	$settings=array(
-		'security_key', 'merid', 'meremail'
+		'security_key', 'merid'
 	);
 	foreach($settings as $s) {
 		variable_set('alipay_'.$s,trim($form_state['values'][$s]));
