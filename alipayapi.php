@@ -31,10 +31,10 @@ require_once("lib/alipay_submit.class.php");
         //必填，不能修改
         //服务器异步通知页面路径
         $notify_url = "http://www.xxx.com/create_direct_pay_by_user-PHP-UTF-8/notify_url.php";
-        //需http://格式的完整路径，不允许加?id=123这类自定义参数
+        //需http://格式的完整路径，不能加?id=123这类自定义参数
         //页面跳转同步通知页面路径
-        $return_url = "http://127.0.0.1/create_direct_pay_by_user-PHP-UTF-8/return_url.php";
-        //需http://格式的完整路径，不允许加?id=123这类自定义参数
+        $return_url = "http://www.xxx.com/create_direct_pay_by_user-PHP-UTF-8/return_url.php";
+        //需http://格式的完整路径，不能加?id=123这类自定义参数，不能写成http://localhost/
         //卖家支付宝帐户
         $seller_email = $_POST['WIDseller_email'];
         //必填
