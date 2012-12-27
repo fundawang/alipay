@@ -92,7 +92,7 @@ class AlipaySubmit {
      * @param $button_name 确认按钮显示文字
      * @return 提交表单HTML文本
      */
-	function buildRequestForm($para_temp, $method, $button_name) {
+	function buildRequestForm($para_temp, $method, $button_name=NULL) {
 		//待请求参数数组
 		$para = $this->buildRequestPara($para_temp);
 		
@@ -102,6 +102,7 @@ class AlipaySubmit {
         }
 
 		//submit按钮控件请不要含有name属性
+		if(!empty($button_name))
         $sHtml = $sHtml."<input type='submit' value='".$button_name."'></form>";
 		
 		$sHtml = $sHtml."<script>document.forms['alipaysubmit'].submit();</script>";
