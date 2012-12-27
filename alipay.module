@@ -131,22 +131,75 @@ function alipay_submit_form_submit($form, $form_state) {
 		"seller_id"	=> variable_get('alipay_merid', $alipay_config['partner']),
 		"out_trade_no"	=> $form_state['values']['orderno'],
 		"subject"	=> $form_state['values']['ordertitle'],
-		//"total_fee"	=> $form_state['values']['amount'],
-		"total_fee"	=> '0.01',
+		"total_fee"	=> $form_state['values']['amount'],
 		"anti_phishing_key"	=> '',
 		"exter_invoke_ip"	=> $_SERVER['REMOTE_ADDR'],
 		"_input_charset"	=> trim(strtolower($alipay_config['input_charset']))
 	);
 
 	$alipay_config['partner'] = variable_get('alipay_merid','');
-
-	//安全检验码，以数字和字母组成的32位字符
 	$alipay_config['key'] = variable_get('alipay_security_key','');
 
 	//建立请求
 	$alipaySubmit = new AlipaySubmit($alipay_config);
 	$html_text = $alipaySubmit->buildRequestForm($parameter,'post');
 	return '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>'.$html_text.'</body></html>';
+}
+
+function alipay_response_access(){
+	include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/alipay.config.php');
+	include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/lib/alipay_notify.class.php');
+	$alipay_config['partner'] = variable_get('alipay_merid','');
+	$alipay_config['key'] = variable_get('alipay_security_key','');
+	if(arg(2)=='response') { // If it is front return_url
+		if(count($_GET)<=1) return FALSE;
+		if(empty($_GET['trade_status'])) return FALSE;
+		if($_GET['trade_status'] != 'TRADE_FINISHED' && $_GET['trade_status'] != 'TRADE_SUCCESS') {
+			watchdog('alipay',
+				'Critical error occured: @returnstr.', array(
+					'@returnstr' => $_GET['trade_status'],
+				),
+				WATCHDOG_ERROR
+			);
+			return FALSE;
+		}
+		$alipayNotify = new AlipayNotify($alipay_config);
+		return $alipayNotify->verifyReturn();
+	} else { // If it is backend notify_url
+		if(count($_POST)==0) return FALSE;
+		if(empty($_POST['trade_status'])) return FALSE;
+		if($_POST['trade_status'] != 'TRADE_FINISHED' && $_POST['trade_status'] != 'TRADE_SUCCESS') {
+			watchdog('alipay',
+				'Critical error occured: @returnstr.', array(
+					'@returnstr' => $_POST['trade_status'],
+				),
+				WATCHDOG_ERROR
+			);
+			return FALSE;
+		}
+		$alipayNotify = new AlipayNotify($alipay_config);
+		return $alipayNotify->verifyNotify();
+	}
+}
+
+function alipay_response() {
+	if(arg(2)=='response') { // If it is front return_url
+		$orderno=$_GET['out_trade_no'];
+		$transno=$_GET['trade_no'];
+	} else { // If it is backend notify_url
+		$orderno=$_POST['out_trade_no'];
+		$transno=$_POST['trade_no'];
+	}
+	$settledate=date('md');
+	module_invoke_all('gatewayreponse',array(
+		'alipay' => array(
+			'orderno' => $orderno,
+			'transactionno' => $transno,
+			'settledate' => $settledate,
+			'is_backend' => arg(2)=='response_back',
+			'echostr' => 'success',
+		),
+	));
 }
 
 ?>
