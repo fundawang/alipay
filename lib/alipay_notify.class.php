@@ -80,7 +80,9 @@ class AlipayNotify {
 		}
 		else {
 			//生成签名结果
-			$isSign = $this->getSignVeryfy($_GET, $_GET["sign"]);
+			$GET=$_GET;
+			unset($GET['q']);
+			$isSign = $this->getSignVeryfy($GET, $_GET["sign"]);
 			//获取支付宝远程服务器ATN结果（验证是否是支付宝发来的消息）
 			$responseTxt = 'true';
 			if (! empty($_GET["notify_id"])) {$responseTxt = $this->getResponse($_GET["notify_id"]);}
