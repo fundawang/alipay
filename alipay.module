@@ -102,8 +102,8 @@ function alipay_paymentgatewayinfo() {
 	return array(
 		'alipay' => array(
 			'url' => 'http://www.alipay.com',
-			'front'  => drupal_get_path('module', 'alipay').'/images/alipay.gif',
-			'payment' => drupal_get_path('module', 'alipay').'/images/alipay.gif',
+			'front'  => drupal_get_path('module', 'alipay').'/images/alipay.png',
+			'payment' => drupal_get_path('module', 'alipay').'/images/alipay.png',
 		),
 	);
 }
