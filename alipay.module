@@ -4,9 +4,6 @@
  * This file is licensed under GPLv2+.
 */
 
-//include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/alipay.config.php');
-//include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/lib/alipay_submit.class.php');
-
 /**
  * @file
  * Provides alipay interface for drupal.
@@ -199,15 +196,18 @@ function alipay_response() {
 	if(arg(2)=='response') { // If it is front return_url
 		$orderno=$_GET['out_trade_no'];
 		$transno=$_GET['trade_no'];
+		$totalfee=$_GET['total_fee'];
 	} else { // If it is backend notify_url
 		$orderno=$_POST['out_trade_no'];
 		$transno=$_POST['trade_no'];
+		$totalfee=$_POST['total_fee'];
 	}
 	$settledate=date('md');
 	module_invoke_all('gatewayreponse',array(
 		'alipay' => array(
 			'orderno' => $orderno,
 			'transactionno' => $transno,
+			'amount' => $totalfee,
 			'settledate' => $settledate,
 			'is_backend' => arg(2)=='response_back',
 			'echostr' => 'success',
