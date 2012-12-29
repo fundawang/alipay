@@ -57,6 +57,18 @@ function alipay_menu() {
 	return $items;
 }
 
+/**
+ * Implementation of hook_uninstall().
+ */
+function alipay_uninstall() {
+	$settings=array(
+		'security_key', 'merid'
+	);
+	foreach($settings as $s) {
+		variable_del('alipay_'.$s);
+	}
+}
+
 function alipay_admin_form($form, $form_state) {
 	$form=array(
 		'#submit' => array('alipay_admin_form_submit'),
