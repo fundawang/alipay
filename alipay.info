@@ -2,5 +2,6 @@ name = AliPay
 description = Provides alipay interface for drupal
 package = Payment
 core = 7.x
+configure = admin/config/services/alipay
 
 version = 0.1.20121227
