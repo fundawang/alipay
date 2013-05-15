@@ -16,7 +16,7 @@ function alipay_help($path, $arg) {
 	switch ($path) {
 		case 'charge/alipay':
 			$output = '<b>'.t('FAQ on Alipay').'</b><br/><ul>';
-			$output.= '<li>'.t('Any questions, you may call 0571-88156688. Or, click <a href="@url" target="_blank">here</a>.',array('@url'=>'http://help.alipay.com/lab/index.htm')).'</li>';
+			$output.= '<li>'.t('Any questions, you may call 95188. Or, click <a href="@url" target="_blank">here</a>.',array('@url'=>'http://help.alipay.com/lab/index.htm')).'</li>';
 			$output.= '<li>'.t('If you want to pay through offshore cards, please select other banking, then VISA, MASTERCARD, etc. Details <a href="@url" target="_blank">here</a>.',array('@url'=>'http://help.alipay.com/lab/210220-210250/0-210250.htm')).'</li>';
 			$output.='</ul>';
 			break;
