@@ -111,6 +111,7 @@ function alipay_admin_form_submit($form, $form_state) {
 function alipay_paymentgatewayinfo() {
 	return array(
 		'alipay' => array(
+			'name' => t('AliPay'),
 			'url' => 'http://www.alipay.com',
 			'front'  => drupal_get_path('module', 'alipay').'/images/alipay.png',
 			'payment' => drupal_get_path('module', 'alipay').'/images/alipay.png',
