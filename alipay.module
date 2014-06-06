@@ -109,7 +109,10 @@ function alipay_admin_form_submit($form, $form_state) {
 }
 
 function alipay_paymentgatewayinfo() {
-	if(empty(variable_get('alipay_merid')) || empty(variable_get('alipay_security_key'))) return;
+	$merid=variable_get('alipay_merid');
+	$key=variable_get('alipay_security_key');
+	if(empty($merid) || empty($key)) return;
+	else
 	return array(
 		'alipay' => array(
 			'name' => t('AliPay'),
