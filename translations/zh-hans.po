@@ -1,0 +1,72 @@
+# $Id$
+#
+# Chinese, Simplified translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  alipay.module: n/a
+#  alipay.info: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2014-06-06 10:34+0800\n"
+"PO-Revision-Date: 2014-06-06 10:34+0800\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Chinese, Simplified <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: alipay.module:18
+msgid "FAQ on Alipay"
+msgstr "支付宝常见问题解答"
+
+#: alipay.module:19
+msgid "Any questions, you may call 95188. Or, click <a href=\"@url\" target=\"_blank\">here</a>."
+msgstr "如有问题，可拨打 95188。或者<a href=\"@url\" target=\"_blank\">点击此处</a>。"
+
+#: alipay.module:20
+msgid "If you want to pay through offshore cards, please select other banking, then VISA, MASTERCARD, etc. Details <a href=\"@url\" target=\"_blank\">here</a>."
+msgstr " "
+
+#: alipay.module:76;95
+msgid "Partner ID"
+msgstr "合作伙伴ID"
+
+#: alipay.module:84;98
+msgid "Security Key"
+msgstr "安全校验码"
+
+#: alipay.module:95;98
+msgid "The @field you have entered is not valid."
+msgstr "您输入的 @field 无效。"
+
+#: alipay.module:114 alipay.info:0
+msgid "AliPay"
+msgstr "支付宝"
+
+#: alipay.module:169;183
+msgid "alipay"
+msgstr "支付宝"
+
+#: alipay.module:169;183
+msgid "Critical error occured: @returnstr."
+msgstr "发生了严重错误：@returnstr。"
+
+#: alipay.module:33
+msgid "alipay settings"
+msgstr "支付宝设置"
+
+#: alipay.module:34
+msgid "alipay merchant settings."
+msgstr "支付宝商户设置。"
+
+#: alipay.info:0
+msgid "Provides alipay interface for drupal"
+msgstr "提供 Drupal 的支付宝接口"
+
+#: alipay.info:0
+msgid "Payment"
+msgstr "支付"
+
