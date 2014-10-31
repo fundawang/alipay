@@ -17,7 +17,6 @@ function alipay_help($path, $arg) {
 		case 'charge/alipay':
 			$output = '<b>'.t('FAQ on Alipay').'</b><br/><ul>';
 			$output.= '<li>'.t('Any questions, you may call 95188. Or, click <a href="@url" target="_blank">here</a>.',array('@url'=>'http://help.alipay.com/lab/index.htm')).'</li>';
-			$output.= '<li>'.t('If you want to pay through offshore cards, please select other banking, then VISA, MASTERCARD, etc. Details <a href="@url" target="_blank">here</a>.',array('@url'=>'http://help.alipay.com/lab/210220-210250/0-210250.htm')).'</li>';
 			$output.='</ul>';
 			break;
 		default: return;
@@ -50,6 +49,16 @@ function alipay_menu() {
 		'access callback' => 'alipay_response_access',
 		'type' => MENU_CALLBACK,
 		'page callback' => 'alipay_response',
+	);
+	$items['charge/log/alipay'] = array(
+		'type' => MENU_LOCAL_TASK,
+		'title' => 'Alipay Transaction Dispatch',
+		'description' => 'Process Alipay transaction Dispatch via data file',
+		'weight' => 2,
+		'access callback' => 'user_access',
+		'access arguments' => array('administer charging'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('alipay_charge_dispatch_form'),
 	);
 	return $items;
 }
@@ -87,6 +96,7 @@ function alipay_admin_form($form, $form_state) {
 		'#maxlength' => 32,
 		'#size' => 40,
 	);
+
 	return system_settings_form($form);
 }
 
@@ -137,6 +147,10 @@ function alipay_submit_form($form, $form_state) {
 function alipay_submit_form_submit($form, $form_state) {
 	include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/alipay.config.php');
 	include_once(DRUPAL_ROOT . '/' . drupal_get_path('module', 'alipay') . '/lib/alipay_submit.class.php');
+	$alipay_config['partner'] = variable_get('alipay_merid','');
+	$alipay_config['key'] = variable_get('alipay_security_key','');
+	$alipaySubmit = new AlipaySubmit($alipay_config);
+
 	$parameter = array(
 		"service" => "create_direct_pay_by_user",
 		"partner" => variable_get('alipay_merid', $alipay_config['partner']),
@@ -149,14 +163,11 @@ function alipay_submit_form_submit($form, $form_state) {
 		"total_fee"	=> $form_state['values']['amount'],
 		"anti_phishing_key"	=> '',
 		"exter_invoke_ip"	=> $_SERVER['REMOTE_ADDR'],
+		"it_b_pay" => '2h',
 		"_input_charset"	=> trim(strtolower($alipay_config['input_charset']))
 	);
 
-	$alipay_config['partner'] = variable_get('alipay_merid','');
-	$alipay_config['key'] = variable_get('alipay_security_key','');
-
 	//建立请求
-	$alipaySubmit = new AlipaySubmit($alipay_config);
 	$html_text = $alipaySubmit->buildRequestForm($parameter,'post');
 	return '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>'.$html_text.'</body></html>';
 }
@@ -169,29 +180,11 @@ function alipay_response_access(){
 	if(arg(2)=='response') { // If it is front return_url
 		if(count($_GET)<=1) return FALSE;
 		if(empty($_GET['trade_status'])) return FALSE;
-		if($_GET['trade_status'] != 'TRADE_FINISHED' && $_GET['trade_status'] != 'TRADE_SUCCESS') {
-			watchdog('alipay',
-				'Critical error occured: @returnstr.', array(
-					'@returnstr' => $_GET['trade_status'],
-				),
-				WATCHDOG_ERROR
-			);
-			return FALSE;
-		}
 		$alipayNotify = new AlipayNotify($alipay_config);
 		return $alipayNotify->verifyReturn();
 	} else { // If it is backend notify_url
 		if(count($_POST)==0) return FALSE;
 		if(empty($_POST['trade_status'])) return FALSE;
-		if($_POST['trade_status'] != 'TRADE_FINISHED' && $_POST['trade_status'] != 'TRADE_SUCCESS') {
-			watchdog('alipay',
-				'Critical error occured: @returnstr.', array(
-					'@returnstr' => $_POST['trade_status'],
-				),
-				WATCHDOG_ERROR
-			);
-			return FALSE;
-		}
 		$alipayNotify = new AlipayNotify($alipay_config);
 		return $alipayNotify->verifyNotify();
 	}
@@ -202,22 +195,86 @@ function alipay_response() {
 		$orderno=$_GET['out_trade_no'];
 		$transno=$_GET['trade_no'];
 		$totalfee=$_GET['total_fee'];
+		$trade_status=$_GET['trade_status'];
 	} else { // If it is backend notify_url
 		$orderno=$_POST['out_trade_no'];
 		$transno=$_POST['trade_no'];
 		$totalfee=$_POST['total_fee'];
+		$trade_status=$_POST['trade_status'];
 	}
-	$settledate=date('md');
-	module_invoke_all('gatewayreponse',array(
-		'alipay' => array(
-			'orderno' => $orderno,
-			'transactionno' => $transno,
-			'amount' => $totalfee,
-			'settledate' => $settledate,
-			'is_backend' => arg(2)=='response_back',
-			'echostr' => 'success',
-		),
-	));
+
+	switch($trade_status) {
+		case 'TRADE_FINISHED':
+		case 'TRADE_SUCCESS':
+			$settledate=date('md');
+			module_invoke_all('gatewayreponse',array(
+				'alipay' => array(
+					'orderno' => $orderno,
+					'transactionno' => $transno,
+					'amount' => $totalfee,
+					'settledate' => $settledate,
+					'is_backend' => arg(2)=='response_back',
+					'echostr' => 'success',
+				),
+			));
+			break;
+		case 'TRADE_CLOSED':
+			module_invoke_all('gatewayorderclose', array(
+				'alipay' => array(
+					'orderno' => $orderno,
+					'is_backend' => arg(2)=='response_back',
+					'echostr' => 'success',
+				),
+			));
+			break;
+	}
+}
+
+function alipay_charge_dispatch_form($form, $form_state) {
+	$form['massivefile']=array(
+		'#type' => 'managed_file',
+		'#title' => t('Data file'),
+		'#required' => TRUE,
+		'#description' => t('Please upload .csv file generated by Alipay.'),
+		'#upload_validators' => array('file_validate_extensions' => array('csv')),
+		'#upload_location' => 'private://',
+	);
+	$form['save']=array(
+		'#type' => 'submit',
+		'#value' => t('Begin Proceed'),
+	);
+	return $form;
+}
+
+function alipay_charge_dispatch_form_submit($form, $form_state) {
+	$file=file_load($form_state['values']['massivefile']);
+	$handle=fopen($file->uri, 'r');
+	if(!$handle) return;
+	while($text=fgets($handle)) {
+		if(substr($text,0,1)=='#') continue;
+		$detail=explode(',',$text);
+		$order=order_load($detail[4]);
+		if(!$order) continue;
+		if($order->status==100) continue;
+		db_update('orders')->condition('orderno',$detail[4])->fields(array('status'=>10))->execute();
+		$r=module_invoke_all('gatewayreponse',array(
+			'alipay' => array(
+				'orderno' => $detail[4],
+				'transactionno' => $detail[3],
+				'amount' => $detail[6],
+				'settledate' => date('md'),
+				'is_backend' => TRUE,
+				'is_processing' => TRUE,
+			),
+		));
+		if($r[0]==1)
+			drupal_set_message(t('Order No.!orderno paid successful with !amount via !method.', array(
+				'!orderno'=>$detail[4],
+				'!amount'=>$detail[6],
+				'!method'=>t('Alipay')
+			)));
+	}
+	fclose($handle);
 }
 
 ?>
