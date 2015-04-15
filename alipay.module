@@ -161,7 +161,7 @@ function alipay_submit_form_submit($form, $form_state) {
 		"out_trade_no"	=> $form_state['values']['orderno'],
 		"subject"	=> $form_state['values']['ordertitle'],
 		"total_fee"	=> $form_state['values']['amount'],
-		"anti_phishing_key"	=> '',
+		"anti_phishing_key"	=> $alipaySubmit->query_timestamp(),
 		"exter_invoke_ip"	=> $_SERVER['REMOTE_ADDR'],
 		"it_b_pay" => '2h',
 		"_input_charset"	=> trim(strtolower($alipay_config['input_charset']))
